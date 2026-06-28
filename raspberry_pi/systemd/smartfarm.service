@@ -1,0 +1,17 @@
+[Unit]
+Description=Cherry Tomato AI Smart Farm
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/Arduino-Pi-Smart-farm/raspberry_pi
+Environment=SERIAL_PORT=/dev/ttyACM0
+Environment=SERIAL_BAUDRATE=115200
+Environment=SMARTFARM_DATA_DIR=/home/pi/smartfarm-data
+ExecStart=/home/pi/Arduino-Pi-Smart-farm/raspberry_pi/.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

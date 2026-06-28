@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ app_name }}</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Cherry Tomato Smart Farm</p>
+        <h1>AI 보조 자동 관리</h1>
+      </div>
+      <div class="mode-toggle" role="group" aria-label="mode">
+        <button id="mode-auto" type="button">Auto</button>
+        <button id="mode-manual" type="button">Manual</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="sensor-grid" aria-label="current sensors">
+        <article class="metric">
+          <span>공기 온도</span>
+          <strong id="air-temp">--</strong>
+        </article>
+        <article class="metric">
+          <span>공기 습도</span>
+          <strong id="air-humidity">--</strong>
+        </article>
+        <article class="metric accent">
+          <span>토양 수분</span>
+          <strong id="soil-moisture">--</strong>
+        </article>
+        <article class="metric">
+          <span>토양 온도</span>
+          <strong id="soil-temp">--</strong>
+        </article>
+        <article class="metric">
+          <span>조도</span>
+          <strong id="light-lux">--</strong>
+        </article>
+        <article class="metric danger">
+          <span>수위</span>
+          <strong id="water-level">--</strong>
+        </article>
+      </section>
+
+      <section class="control-panel">
+        <div class="panel-head">
+          <h2>액추에이터</h2>
+          <span id="serial-state">--</span>
+        </div>
+        <div class="actuator-row">
+          <div>
+            <span>펌프</span>
+            <strong id="pump-state">--</strong>
+          </div>
+          <button id="pump-on" type="button">5초 관수</button>
+          <button id="pump-off" type="button">정지</button>
+        </div>
+        <div class="actuator-row">
+          <div>
+            <span>팬</span>
+            <strong id="fan-state">--</strong>
+          </div>
+          <button id="fan-on" type="button">켜기</button>
+          <button id="fan-off" type="button">끄기</button>
+        </div>
+        <div class="actuator-row">
+          <div>
+            <span>LED</span>
+            <strong id="light-state">--</strong>
+          </div>
+          <input id="light-value" type="range" min="0" max="255" value="180" />
+          <button id="light-on" type="button">적용</button>
+          <button id="light-off" type="button">끄기</button>
+        </div>
+      </section>
+
+      <section class="chart-panel">
+        <div class="panel-head">
+          <h2>최근 24시간</h2>
+          <button id="refresh-history" type="button">새로고침</button>
+        </div>
+        <canvas id="history-chart" width="900" height="320"></canvas>
+      </section>
+
+      <section class="split">
+        <article>
+          <h2>AI 추천</h2>
+          <div id="predictions" class="list"></div>
+        </article>
+        <article>
+          <h2>알림</h2>
+          <div id="alerts" class="list"></div>
+        </article>
+      </section>
+
+      <section class="split">
+        <article>
+          <h2>관수/제어 기록</h2>
+          <div id="events" class="list"></div>
+        </article>
+        <article>
+          <h2>병해 이미지 분석</h2>
+          <form id="image-form" class="upload-row">
+            <input id="image-file" name="image" type="file" accept="image/*" />
+            <button type="submit">분석</button>
+          </form>
+          <pre id="disease-result"></pre>
+        </article>
+      </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>
