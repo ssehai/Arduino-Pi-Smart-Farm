@@ -44,7 +44,7 @@ class ControlEngine:
         return (datetime.now(ts.tzinfo) - ts).total_seconds() / 3600
 
     async def run_once(self) -> list[dict[str, Any]]:
-        latest = self.db.latest_sensor_reading()
+        latest = self.db.latest_sensor_reading(source="arduino")
         if latest is None:
             return []
 
@@ -52,7 +52,7 @@ class ControlEngine:
         for alert in validate_sensor_reading(latest):
             self.db.insert_alert("warning", alert)
 
-        recent = self.db.sensor_history(hours=2, limit=80)
+        recent = self.db.sensor_history(hours=2, limit=80, source="arduino")
         anomaly = self.anomaly_detector.detect(recent)
         if anomaly.is_anomaly:
             self.db.insert_alert(anomaly.level, "; ".join(anomaly.reasons))
@@ -146,7 +146,7 @@ class ControlEngine:
         source: str,
         reason: str,
     ) -> dict[str, Any]:
-        latest = self.db.latest_sensor_reading()
+        latest = self.db.latest_sensor_reading(source="arduino")
         last_hours = self.last_watering_hours()
         decision = validate_command(
             latest=latest,

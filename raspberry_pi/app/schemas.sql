@@ -9,7 +9,8 @@ CREATE TABLE IF NOT EXISTS sensor_readings (
   water_level TEXT,
   ph REAL,
   ec REAL,
-  co2 REAL
+  co2 REAL,
+  source TEXT NOT NULL DEFAULT 'arduino'
 );
 
 CREATE TABLE IF NOT EXISTS actuator_events (

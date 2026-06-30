@@ -33,6 +33,12 @@ class Database:
         schema = (BASE_DIR / "schemas.sql").read_text(encoding="utf-8")
         with self._lock, self.connect() as conn:
             conn.executescript(schema)
+            columns = {
+                row["name"]
+                for row in conn.execute("PRAGMA table_info(sensor_readings)").fetchall()
+            }
+            if "source" not in columns:
+                conn.execute("ALTER TABLE sensor_readings ADD COLUMN source TEXT")
             conn.execute("INSERT OR IGNORE INTO app_state(key, value) VALUES('mode', 'auto')")
             conn.execute("INSERT OR IGNORE INTO app_state(key, value) VALUES('pump', 'off')")
             conn.execute("INSERT OR IGNORE INTO app_state(key, value) VALUES('fan', 'off')")
@@ -50,38 +56,52 @@ class Database:
             "ph": reading.get("ph"),
             "ec": reading.get("ec"),
             "co2": reading.get("co2"),
+            "source": reading.get("source") or "arduino",
         }
         with self._lock, self.connect() as conn:
             cur = conn.execute(
                 """
                 INSERT INTO sensor_readings(
                   timestamp, air_temp, air_humidity, soil_moisture, soil_temp,
-                  light_lux, water_level, ph, ec, co2
+                  light_lux, water_level, ph, ec, co2, source
                 ) VALUES (
                   :timestamp, :air_temp, :air_humidity, :soil_moisture, :soil_temp,
-                  :light_lux, :water_level, :ph, :ec, :co2
+                  :light_lux, :water_level, :ph, :ec, :co2, :source
                 )
                 """,
                 payload,
             )
             return int(cur.lastrowid)
 
-    def latest_sensor_reading(self) -> dict[str, Any] | None:
+    def latest_sensor_reading(self, source: str | None = None) -> dict[str, Any] | None:
+        where = "WHERE source = ?" if source else ""
+        params = (source,) if source else ()
         with self._lock, self.connect() as conn:
-            row = conn.execute("SELECT * FROM sensor_readings ORDER BY timestamp DESC, id DESC LIMIT 1").fetchone()
+            row = conn.execute(
+                f"SELECT * FROM sensor_readings {where} ORDER BY timestamp DESC, id DESC LIMIT 1",
+                params,
+            ).fetchone()
             return dict(row) if row else None
 
-    def sensor_history(self, hours: int = 24, limit: int = 500) -> list[dict[str, Any]]:
+    def sensor_history(
+        self,
+        hours: int = 24,
+        limit: int = 500,
+        source: str | None = None,
+    ) -> list[dict[str, Any]]:
         since = (datetime.now(KST) - timedelta(hours=hours)).replace(microsecond=0).isoformat()
+        source_filter = "AND source = ?" if source else ""
+        params: tuple[Any, ...] = (since, source, limit) if source else (since, limit)
         with self._lock, self.connect() as conn:
             rows = conn.execute(
-                """
+                f"""
                 SELECT * FROM sensor_readings
                 WHERE timestamp >= ?
+                {source_filter}
                 ORDER BY timestamp ASC
                 LIMIT ?
                 """,
-                (since, limit),
+                params,
             ).fetchall()
             return [dict(row) for row in rows]
 

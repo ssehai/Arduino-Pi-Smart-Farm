@@ -272,13 +272,13 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 브라우저에서 `http://localhost:8000` 접속.
 
-실제 Arduino 연결 시:
+기본 포트는 `/dev/ttyACM0`입니다. Arduino가 다른 포트로 잡히는 경우에만 `SERIAL_PORT`를 지정하세요.
 
 ```bash
 SERIAL_PORT=/dev/ttyACM0 uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
-`SERIAL_PORT`가 없으면 앱은 가상 센서 데이터를 생성해서 대시보드와 DB를 테스트할 수 있습니다.
+Arduino Serial 장치가 없거나 센서 데이터가 들어오지 않으면 대시보드는 가상 값을 만들지 않고 `데이터 없음` 상태로 표시합니다.
 
 ## 14. 실제 배포/운영 주의사항
 

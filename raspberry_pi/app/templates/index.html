@@ -19,6 +19,25 @@
     </header>
 
     <main class="layout">
+      <section class="arduino-status" aria-label="arduino serial status">
+        <div>
+          <span>Arduino 포트</span>
+          <strong id="arduino-port">--</strong>
+        </div>
+        <div>
+          <span>장치 감지</span>
+          <strong id="arduino-device">--</strong>
+        </div>
+        <div>
+          <span>Serial 연결</span>
+          <strong id="arduino-serial">--</strong>
+        </div>
+        <div>
+          <span>센서 데이터</span>
+          <strong id="arduino-data">--</strong>
+        </div>
+      </section>
+
       <section class="sensor-grid" aria-label="current sensors">
         <article class="metric">
           <span>공기 온도</span>

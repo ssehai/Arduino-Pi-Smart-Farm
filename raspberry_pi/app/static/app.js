@@ -17,6 +17,10 @@ const els = {
   waterCard: document.querySelector(".metric.danger"),
   modeAuto: document.querySelector("#mode-auto"),
   modeManual: document.querySelector("#mode-manual"),
+  arduinoPort: document.querySelector("#arduino-port"),
+  arduinoDevice: document.querySelector("#arduino-device"),
+  arduinoSerial: document.querySelector("#arduino-serial"),
+  arduinoData: document.querySelector("#arduino-data"),
 };
 
 async function postJson(url, body) {
@@ -32,6 +36,7 @@ async function postJson(url, body) {
 function renderStatus(data) {
   const latest = data.latest || {};
   const state = data.state || {};
+  const arduino = data.arduino || {};
   els.airTemp.textContent = fmt(latest.air_temp, " C");
   els.airHumidity.textContent = fmt(latest.air_humidity, " %");
   els.soilMoisture.textContent = fmt(latest.soil_moisture, " %");
@@ -41,8 +46,19 @@ function renderStatus(data) {
   els.pumpState.textContent = state.pump || "--";
   els.fanState.textContent = state.fan || "--";
   els.lightState.textContent = state.light || "0";
-  els.serialState.textContent = data.serial_connected ? "Serial" : "Simulator";
+  els.serialState.textContent = serialSummary(arduino);
+  els.serialState.title = arduino.last_error || "";
   els.waterCard.classList.toggle("low", latest.water_level === "low");
+
+  setStatus(els.arduinoPort, arduino.port || "--", "ok");
+  setStatus(els.arduinoDevice, arduino.device_present ? "감지됨" : "없음", arduino.device_present ? "ok" : "bad");
+  setStatus(els.arduinoSerial, arduino.serial_open ? "열림" : "닫힘", arduino.serial_open ? "ok" : "bad");
+  setStatus(
+    els.arduinoData,
+    arduino.has_sensor_data ? `수신됨 ${latest.timestamp || ""}` : "수신 대기",
+    arduino.has_sensor_data ? "ok" : "warn",
+    arduino.last_error || "",
+  );
 
   els.modeAuto.classList.toggle("active", state.mode === "auto");
   els.modeManual.classList.toggle("active", state.mode === "manual");
@@ -50,6 +66,20 @@ function renderStatus(data) {
   renderList(els.events, data.events || [], eventItem);
   renderList(els.alerts, data.alerts || [], alertItem);
   renderList(els.predictions, data.predictions || [], predictionItem);
+}
+
+function serialSummary(arduino) {
+  if (!arduino.device_present) return `${arduino.port || "/dev/ttyACM0"} 없음`;
+  if (!arduino.serial_open) return "Arduino 연결 실패";
+  if (!arduino.has_sensor_data) return "Arduino 데이터 대기";
+  return "Arduino 연결됨";
+}
+
+function setStatus(node, text, state, title = "") {
+  node.textContent = text;
+  node.classList.remove("ok", "warn", "bad");
+  if (state) node.classList.add(state);
+  node.title = title;
 }
 
 function renderList(container, items, renderer) {
@@ -106,6 +136,12 @@ function drawChart(items) {
   ctx.clearRect(0, 0, w, h);
   ctx.fillStyle = "#fbfcfb";
   ctx.fillRect(0, 0, w, h);
+  if (!items.length) {
+    ctx.fillStyle = "#65716a";
+    ctx.font = "18px system-ui";
+    ctx.fillText("Arduino 센서 데이터 없음", 40, h / 2);
+    return;
+  }
   ctx.strokeStyle = "#dce4dd";
   ctx.lineWidth = 1;
   for (let i = 0; i <= 4; i++) {
@@ -168,4 +204,5 @@ stream.addEventListener("status", event => renderStatus(JSON.parse(event.data)))
 
 loadStatus();
 loadHistory();
+setInterval(loadStatus, 5000);
 setInterval(loadHistory, 60000);
