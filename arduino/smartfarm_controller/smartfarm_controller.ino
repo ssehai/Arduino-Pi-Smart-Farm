@@ -60,8 +60,14 @@ void setup() {
 
   Serial.begin(115200);
   Wire.begin();
+#ifdef WOKWI_SIMULATION
+  // Wokwi has no SHT31/BH1750 chip models; report both present with simulated readings.
+  shtReady = true;
+  lightReady = true;
+#else
   shtReady = sht31.begin(0x44);
   lightReady = lightMeter.begin(BH1750::CONTINUOUS_HIGH_RES_MODE);
+#endif
   ds18b20.begin();
 
   state.dayStartedAt = millis();
@@ -99,11 +105,17 @@ const char* waterLevelState() {
 }
 
 void publishSensorReading(unsigned long now) {
+#ifdef WOKWI_SIMULATION
+  float airTemp = shtReady ? 24.5f + (now % 6000) / 1000.0f : NAN;
+  float airHumidity = shtReady ? 55.0f + (now % 4000) / 200.0f : NAN;
+  float lux = lightReady ? 300.0f + (now % 10000) / 20.0f : NAN;
+#else
   float airTemp = shtReady ? sht31.readTemperature() : NAN;
   float airHumidity = shtReady ? sht31.readHumidity() : NAN;
+  float lux = lightReady ? lightMeter.readLightLevel() : NAN;
+#endif
   ds18b20.requestTemperatures();
   float soilTemp = ds18b20.getTempCByIndex(0);
-  float lux = lightReady ? lightMeter.readLightLevel() : NAN;
 
   StaticJsonDocument<384> doc;
   doc["type"] = "sensor_reading";

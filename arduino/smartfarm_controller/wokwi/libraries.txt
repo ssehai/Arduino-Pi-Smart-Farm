@@ -1,0 +1,6 @@
+ArduinoJson
+Adafruit BusIO
+Adafruit SHT31 Library
+BH1750
+OneWire
+DallasTemperature

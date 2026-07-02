@@ -8,3 +8,4 @@ raspberry_pi/data/
 *.sqlite3
 *.db
 .env
+arduino/smartfarm_controller/wokwi/build/

@@ -1,0 +1,33 @@
+name: 'Pump safety rules test'
+version: 1
+author: 'smartfarm'
+steps:
+  - delay: 500ms
+
+  # Wokwi's first serial write after boot can lose/corrupt its leading byte;
+  # send a disposable warm-up line first so the real commands below parse cleanly.
+  - write-serial: |
+      warmup
+  - delay: 200ms
+
+  # Water level starts "low" (pushbutton not pressed -> pin HIGH). Pump command must be rejected.
+  - write-serial: |
+      {"type":"command","command_id":"wl-test","actuator":"pump","action":"on","duration_ms":3000}
+  - wait-serial: '"command_id":"wl-test","status":"rejected","message":"water level low"'
+
+  # Simulate water level OK by pressing the pushbutton (pulls pin LOW).
+  - set-control:
+      part-id: waterlevel
+      control: pressed
+      value: 1
+  - delay: 100ms
+
+  # Duration over MAX_PUMP_RUN_MS (10000ms) must be rejected even with water level OK.
+  - write-serial: |
+      {"type":"command","command_id":"dur-test","actuator":"pump","action":"on","duration_ms":15000}
+  - wait-serial: '"command_id":"dur-test","status":"rejected","message":"duration exceeds max pump run"'
+
+  # Sanity check: a valid duration with water level OK should still be accepted.
+  - write-serial: |
+      {"type":"command","command_id":"ok-test","actuator":"pump","action":"on","duration_ms":2000}
+  - wait-serial: '"command_id":"ok-test","status":"accepted","message":"pump started"'
